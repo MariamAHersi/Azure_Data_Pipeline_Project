@@ -17,10 +17,11 @@ def clean_books_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop_duplicates(subset=['UPC'])
 
     # Drop column as it has no useful information for analysis
-    df.drop(columns=[ 'Product Type','Number of Reviews'])
+    df.drop(columns=[ 'Product Type'], inplace=True)
+    df.drop(columns=[ 'Number of Reviews'], inplace=True)
 
     # Remove £ symbol from price and convert to numeric
-    df['Price'] = df['Price'].str.replace('Â£', '', regex=False)
+    df['Price'] = df['Price'].str.extract(r'(\d+)')
     # Convert price to float
     df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
 
