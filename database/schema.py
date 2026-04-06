@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 #%%
 
 import mysql.connector
@@ -12,26 +9,23 @@ import pandas as pd
 conn = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="root",
-    database="Packt_db")
+    passwd="Hersi_001@112",
+    database="book_db")
 cursor = conn.cursor()
-cursor.execute("DROP TABLE IF EXISTS Engineering_Books")
 
 
 #%%
 
-# Create 'Engineering_Books' table
+# Create 'Books' table
 # Max URL length = 2048, we limit max URL size in db = 255
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS Engineering_Books (
-isbn VARCHAR(20) PRIMARY KEY NOT NULL,
-book_title TEXT NOT NULL,
-author_names VARCHAR(255) NOT NULL,
-publication_date DATE NOT NULL,
-star_rating FLOAT,
-num_of_ratings INT,
+CREATE TABLE IF NOT EXISTS Books (
+upc VARCHAR(20) PRIMARY KEY NOT NULL,
+book_title VARCHAR(255) NOT NULL,
 price DECIMAL(5,2) NOT NULL,
-book_format VARCHAR(10) NOT NULL,
+star_rating FLOAT,
+availability VARCHAR(50) NOT NULL,
+description TEXT,
 url VARCHAR(255) NOT NULL
 )""")
 
@@ -39,33 +33,27 @@ url VARCHAR(255) NOT NULL
 #%%
 
 # Load CSV
-Packt_df = pd.read_csv("engineering_books_from_Packt.csv")
+df = pd.read_csv("../data/processed/books_clean.csv")
 
 
 #%%
 
 # Checking column names
-print(Packt_df.columns)
-
-
-#%%
-
-# Convert date to sql format
-Packt_df['Publication Date'] = pd.to_datetime(Packt_df['Publication Date']).dt.strftime('%Y-%m-%d')
+print(df.columns)
 
 
 #%%
 
 # Inserting data into table
-for _, row in Packt_df.iterrows():
+for _, row in df.iterrows():
     sql = """
-    INSERT INTO Engineering_Books (
-    isbn, book_title, author_names, publication_date, star_rating, num_of_ratings, price, book_format, url)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO Books (
+    upc, book_title, price, star_rating, availability, description, url)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON DUPLICATE KEY UPDATE book_title=VALUES(book_title)"""
     values = (
-        row['ISBN'],row['Title'],row['Authors'],row['Publication Date'], None if pd.isna(row['Star Rating']) else row['Star Rating'],
-        None if pd.isna(row['Number of Ratings']) else row['Number of Ratings'], row['Price'], row['Format'], row['URL']
+        row['UPC'],row['Title'],row['Price'], None if pd.isna(row['Star Rating']) else row['Star Rating'],
+        None if pd.isna(row['Availability']) else row['Availability'], None if pd.isna(row['Description']) else row['Description'], row['URL']
     )
 
     try:
@@ -77,3 +65,5 @@ conn.commit()
 cursor.close()
 conn.close()
 
+
+# %%
